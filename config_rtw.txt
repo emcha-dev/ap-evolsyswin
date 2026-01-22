@@ -1,0 +1,63 @@
+#configuration des interfaces réseau
+
+#interface pont vers WAN
+set interfaces ethernet eth0 address dhcp
+set interfaces ethernet eth0 description 'OUTSIDE'
+
+#réseau interne TL_DMZ
+set interfaces ethernet eth1 address 172.16.2.254/24
+set interfaces ethernet eth1 description 'DMZ'
+
+#réseau interne TL_SERVEURS
+set interfaces ethernet eth2 address 10.2.0.254/24
+set interfaces ethernet eth2 description 'SERVEURS'
+
+#réseau interne TL_BUREAUX
+set interfaces ethernet eth3 address 192.168.2.254/24
+set interfaces ethernet eth3 description 'BUREAUX'
+
+#réseau interne TL_JE1
+set interfaces ethernet eth4 address 172.17.11.254/24
+set interfaces ethernet eth4 description 'JE1'
+
+
+#configuration des règles NAT
+
+#TL_DMZ
+set nat source rule 100 outbound-interface name eth0
+set nat source rule 100 source address 172.16.2.0/24
+set nat source rule 100 translation address masquerade
+
+#TL_SERVEURS
+set nat source rule 200 outbound-interface name eth0
+set nat source rule 200 source address 10.2.0.0/24
+set nat source rule 200 translation address masquerade
+
+#TL_BUREAUX
+set nat source rule 300 outbound-interface name eth0
+set nat source rule 300 source address 192.168.2.0/24
+set nat source rule 300 translation address masquerade
+
+#TL_JE1
+set nat source rule 400 outbound-interface name eth0
+set nat source rule 400 source address 172.17.11.0/24
+set nat source rule 400 translation address masquerade
+
+#configuration de l'agent relais DHCP
+
+# interface vers le serveur DHCP
+set service dhcp-relay upstream-interface eth2
+
+# TL_BUREAUX
+set service dhcp-relay listen-interface eth3
+# TL_JE1
+set service dhcp-relay listen-interface eth4
+
+# adresse du DHCP
+set service dhcp-relay server 10.2.0.1
+set service dhcp-relay relay-options relay-agents-packets discard
+
+commit
+save
+
+restart dhcp relay-agent
